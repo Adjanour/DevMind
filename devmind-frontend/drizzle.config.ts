@@ -8,5 +8,5 @@ export default {
   dbCredentials: {
     url: env.DATABASE_URL,
   },
-  tablesFilter: ["devmind-frontend_*"],
+  tablesFilter: ["devmind_*"],
 } satisfies Config;
