@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pin, Archive, Tag, Calendar } from "lucide-react";
+import { Plus, Pin, Archive, Tag, Calendar, FileText } from "lucide-react";
 import { cn, formatDate } from "~/lib/utils";
 import { type Note, type Tag } from "~/lib/api";
 

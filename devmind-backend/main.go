@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -55,7 +54,7 @@ func initDB() {
 		dbURL = "postgres://user:password@localhost/devmind?sslmode=disable"
 	}
 
-	db, err = gorm.Open("postgres", dbURL)
+	db, err = gorm.Open(postgres.Open(dbURL), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -139,8 +138,13 @@ func updateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var note Note
-	if db.First(&note, id).RecordNotFound() {
+	result := db.First(&note, id)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		http.Error(w, "Note not found", http.StatusNotFound)
+		return
+	}
+	if result.Error != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
@@ -221,8 +225,13 @@ func updateTimeline(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var timeline Timeline
-	if db.First(&timeline, id).RecordNotFound() {
+	result := db.First(&timeline, id)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		http.Error(w, "Timeline not found", http.StatusNotFound)
+		return
+	}
+	if result.Error != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
@@ -245,7 +254,12 @@ func main() {
 	}
 
 	initDB()
-	defer db.Close()
+	// Get the underlying sql.DB instance for proper connection management
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatal("Failed to get database instance:", err)
+	}
+	defer sqlDB.Close()
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api").Subrouter()
