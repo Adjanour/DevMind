@@ -4,21 +4,24 @@ DevMind is a next-generation notes and knowledge base application specifically d
 
 ## 🚀 Features
 
-### ✅ Implemented (MVP)
+### ✅ Implemented (v1.0)
 - **Rich Note Editor**: Advanced text editor with markdown support, syntax highlighting, and rich formatting
+- **AI Integration**: OpenAI-powered smart suggestions, content improvement, and auto-tagging
 - **Smart Organization**: Tag-based categorization, pinning, and archiving
 - **Intelligent Search**: Full-text search across notes with filtering capabilities
 - **Timeline View**: Track project milestones and progress over time
 - **Mind Mapping**: Interactive visual organization of ideas and concepts
+- **Dark/Light Mode**: Comprehensive theming system with system preference detection
 - **Modern UI**: Beautiful, responsive interface built with Tailwind CSS
 - **Real-time Sync**: Fast API with PostgreSQL backend
 
-### 🔮 Planned Features
-- **AI Integration**: Smart code suggestions and contextual reminders
+### 🔮 Upcoming Features
+- **Advanced Search**: Elasticsearch integration and semantic search
 - **Multimedia Support**: Images, videos, and file attachments
-- **Collaboration**: Share notes and collaborate with team members
-- **Code Snippets**: Syntax-highlighted code blocks with language detection
-- **Export Options**: PDF, Markdown, and HTML export
+- **Real-time Collaboration**: Live editing with WebSocket integration
+- **Enhanced Code Blocks**: Syntax highlighting for 100+ languages with execution
+- **Export System**: PDF, Markdown, and HTML export with templates
+- **Analytics Dashboard**: Usage insights and productivity metrics
 - **Mobile App**: Native mobile applications
 
 ## 🏗️ Architecture
@@ -80,7 +83,7 @@ cd devmind-frontend
 
 # Copy environment file and configure
 cp .env.example .env.local
-# Edit .env.local with your database and API URLs
+# Edit .env.local with your database, API URLs, and OpenAI API key
 
 # Install dependencies
 npm install
@@ -94,6 +97,11 @@ npm run db:push
 npm run dev
 # or
 bun dev
+```
+
+**Important**: Add your OpenAI API key to `.env.local`:
+```bash
+OPENAI_API_KEY="sk-your-openai-api-key-here"
 ```
 
 ### 5. Access the Application

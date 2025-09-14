@@ -24,9 +24,11 @@ import {
   Tag,
   Calendar,
   FileText,
+  Sparkles,
 } from "lucide-react";
 import { cn, formatDateTime } from "~/lib/utils";
 import { type Note } from "~/lib/api";
+import { AIAssistant } from "./AIAssistant";
 
 interface NoteEditorProps {
   note: Note | null;
@@ -124,6 +126,24 @@ export function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) {
     if (confirm("Are you sure you want to delete this note?")) {
       onDelete(note.id);
     }
+  };
+
+  const handleAISuggestion = (suggestion: string) => {
+    if (editor) {
+      editor.commands.setContent(suggestion);
+      setHasChanges(true);
+    }
+  };
+
+  const handleAITagsGenerated = (aiTags: string[]) => {
+    const newTags = [...new Set([...tags, ...aiTags])];
+    setTags(newTags);
+    setHasChanges(true);
+  };
+
+  const handleAITitleSuggested = (aiTitle: string) => {
+    setTitle(aiTitle);
+    setHasChanges(true);
   };
 
   if (!note) {
@@ -248,77 +268,87 @@ export function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) {
         {/* Toolbar */}
         {editor && (
           <div className="px-4 pb-4">
-            <div className="flex items-center gap-1 p-2 bg-gray-50 rounded-lg">
-              <button
-                onClick={() => editor.chain().focus().toggleBold().run()}
-                className={cn(
-                  "p-2 rounded hover:bg-gray-200 transition-colors",
-                  editor.isActive("bold") && "bg-gray-200"
-                )}
-              >
-                <Bold className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => editor.chain().focus().toggleItalic().run()}
-                className={cn(
-                  "p-2 rounded hover:bg-gray-200 transition-colors",
-                  editor.isActive("italic") && "bg-gray-200"
-                )}
-              >
-                <Italic className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => editor.chain().focus().toggleCode().run()}
-                className={cn(
-                  "p-2 rounded hover:bg-gray-200 transition-colors",
-                  editor.isActive("code") && "bg-gray-200"
-                )}
-              >
-                <Code className="h-4 w-4" />
-              </button>
-              <div className="w-px h-6 bg-gray-300 mx-2" />
-              <button
-                onClick={() => editor.chain().focus().toggleBulletList().run()}
-                className={cn(
-                  "p-2 rounded hover:bg-gray-200 transition-colors",
-                  editor.isActive("bulletList") && "bg-gray-200"
-                )}
-              >
-                <List className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                className={cn(
-                  "p-2 rounded hover:bg-gray-200 transition-colors",
-                  editor.isActive("orderedList") && "bg-gray-200"
-                )}
-              >
-                <ListOrdered className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                className={cn(
-                  "p-2 rounded hover:bg-gray-200 transition-colors",
-                  editor.isActive("blockquote") && "bg-gray-200"
-                )}
-              >
-                <Quote className="h-4 w-4" />
-              </button>
-              <div className="w-px h-6 bg-gray-300 mx-2" />
-              <button
-                onClick={() => editor.chain().focus().undo().run()}
-                disabled={!editor.can().undo()}
-                className="p-2 rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
-              >
-                <Undo className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => editor.chain().focus().redo().run()}
-                disabled={!editor.can().redo()}
-                className="p-2 rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
-              >
-                <Redo className="h-4 w-4" />
-              </button>
+            <div className="flex items-center justify-between gap-4 mb-3">
+              <div className="flex items-center gap-1 p-2 bg-gray-50 rounded-lg">
+                <button
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                  className={cn(
+                    "p-2 rounded hover:bg-gray-200 transition-colors",
+                    editor.isActive("bold") && "bg-gray-200"
+                  )}
+                >
+                  <Bold className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                  className={cn(
+                    "p-2 rounded hover:bg-gray-200 transition-colors",
+                    editor.isActive("italic") && "bg-gray-200"
+                  )}
+                >
+                  <Italic className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleCode().run()}
+                  className={cn(
+                    "p-2 rounded hover:bg-gray-200 transition-colors",
+                    editor.isActive("code") && "bg-gray-200"
+                  )}
+                >
+                  <Code className="h-4 w-4" />
+                </button>
+                <div className="w-px h-6 bg-gray-300 mx-2" />
+                <button
+                  onClick={() => editor.chain().focus().toggleBulletList().run()}
+                  className={cn(
+                    "p-2 rounded hover:bg-gray-200 transition-colors",
+                    editor.isActive("bulletList") && "bg-gray-200"
+                  )}
+                >
+                  <List className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                  className={cn(
+                    "p-2 rounded hover:bg-gray-200 transition-colors",
+                    editor.isActive("orderedList") && "bg-gray-200"
+                  )}
+                >
+                  <ListOrdered className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                  className={cn(
+                    "p-2 rounded hover:bg-gray-200 transition-colors",
+                    editor.isActive("blockquote") && "bg-gray-200"
+                  )}
+                >
+                  <Quote className="h-4 w-4" />
+                </button>
+                <div className="w-px h-6 bg-gray-300 mx-2" />
+                <button
+                  onClick={() => editor.chain().focus().undo().run()}
+                  disabled={!editor.can().undo()}
+                  className="p-2 rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
+                >
+                  <Undo className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().redo().run()}
+                  disabled={!editor.can().redo()}
+                  className="p-2 rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
+                >
+                  <Redo className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* AI Assistant */}
+              <AIAssistant
+                content={editor.getHTML() + " " + title}
+                onSuggestion={handleAISuggestion}
+                onTagsGenerated={handleAITagsGenerated}
+                onTitleSuggested={handleAITitleSuggested}
+              />
             </div>
           </div>
         )}

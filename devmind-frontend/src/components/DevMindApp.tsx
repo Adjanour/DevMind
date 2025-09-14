@@ -8,6 +8,7 @@ import { TimelineView } from "./TimelineView";
 import { MindMapView } from "./MindMapView";
 import { api, type Note, type Tag } from "~/lib/api";
 import { Brain, FileText, Clock, Map } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 type View = "notes" | "timeline" | "mindmap";
 
@@ -125,13 +126,16 @@ export function DevMindApp() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center gap-2 mb-4">
-            <Brain className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">DevMind</h1>
+      <div className="w-80 bg-card border-r border-border flex flex-col">
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Brain className="h-8 w-8 text-primary" />
+              <h1 className="text-2xl font-bold text-foreground">DevMind</h1>
+            </div>
+            <ThemeToggle />
           </div>
           
           <SearchBar

@@ -2,11 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Variables for theme colors */
+:root {
+  --color-background: rgb(249, 250, 251);
+  --color-foreground: rgb(17, 24, 39);
+  --color-card: rgb(255, 255, 255);
+  --color-cardForeground: rgb(17, 24, 39);
+  --color-primary: rgb(59, 130, 246);
+  --color-primaryForeground: rgb(255, 255, 255);
+  --color-secondary: rgb(243, 244, 246);
+  --color-secondaryForeground: rgb(17, 24, 39);
+  --color-muted: rgb(243, 244, 246);
+  --color-mutedForeground: rgb(107, 114, 128);
+  --color-accent: rgb(243, 244, 246);
+  --color-accentForeground: rgb(17, 24, 39);
+  --color-destructive: rgb(239, 68, 68);
+  --color-destructiveForeground: rgb(255, 255, 255);
+  --color-border: rgb(229, 231, 235);
+  --color-input: rgb(229, 231, 235);
+  --color-ring: rgb(59, 130, 246);
+}
+
+.dark {
+  --color-background: rgb(3, 7, 18);
+  --color-foreground: rgb(248, 250, 252);
+  --color-card: rgb(15, 23, 42);
+  --color-cardForeground: rgb(248, 250, 252);
+  --color-primary: rgb(59, 130, 246);
+  --color-primaryForeground: rgb(15, 23, 42);
+  --color-secondary: rgb(30, 41, 59);
+  --color-secondaryForeground: rgb(248, 250, 252);
+  --color-muted: rgb(30, 41, 59);
+  --color-mutedForeground: rgb(148, 163, 184);
+  --color-accent: rgb(30, 41, 59);
+  --color-accentForeground: rgb(248, 250, 252);
+  --color-destructive: rgb(239, 68, 68);
+  --color-destructiveForeground: rgb(248, 250, 252);
+  --color-border: rgb(30, 41, 59);
+  --color-input: rgb(30, 41, 59);
+  --color-ring: rgb(59, 130, 246);
+}
+
 /* Custom styles for the rich text editor */
 .ProseMirror {
   outline: none;
   padding: 1rem;
   min-height: 200px;
+  color: var(--color-foreground);
 }
 
 .ProseMirror h1,
@@ -15,6 +57,7 @@
   font-weight: 600;
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
+  color: var(--color-foreground);
 }
 
 .ProseMirror h1 {
@@ -47,15 +90,16 @@
 }
 
 .ProseMirror blockquote {
-  border-left: 4px solid #e5e7eb;
+  border-left: 4px solid var(--color-border);
   padding-left: 1rem;
   margin: 1rem 0;
   font-style: italic;
-  color: #6b7280;
+  color: var(--color-mutedForeground);
 }
 
 .ProseMirror pre {
-  background-color: #f3f4f6;
+  background-color: var(--color-muted);
+  border: 1px solid var(--color-border);
   border-radius: 0.375rem;
   padding: 1rem;
   margin: 1rem 0;
@@ -63,7 +107,8 @@
 }
 
 .ProseMirror code {
-  background-color: #f3f4f6;
+  background-color: var(--color-muted);
+  color: var(--color-foreground);
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;

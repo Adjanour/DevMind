@@ -2,6 +2,7 @@ import "~/styles/globals.css";
 
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
+import { ThemeProvider } from "~/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "DevMind - AI-Powered Knowledge Base",
@@ -13,8 +14,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable}`}>
-      <body className="antialiased">{children}</body>
+    <html lang="en" className={`${GeistSans.variable}`} suppressHydrationWarning>
+      <body className="antialiased bg-background text-foreground">
+        <ThemeProvider defaultTheme="system">
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
