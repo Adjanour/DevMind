@@ -1,10 +1,11 @@
-import OpenAI from "openai";
+import { 
+  AIProviderManager, 
+  createProvider, 
+  type AIProvider, 
+  type AIMessage,
+  type AIProviderConfig 
+} from "./ai-providers";
 import { env } from "~/env";
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY,
-});
 
 export interface AIAssistanceRequest {
   content: string;
@@ -20,6 +21,12 @@ export interface AIAssistanceResponse {
 
 export class AIService {
   private static instance: AIService;
+  private providerManager: AIProviderManager;
+
+  constructor() {
+    this.providerManager = new AIProviderManager();
+    this.initializeProviders();
+  }
 
   static getInstance(): AIService {
     if (!AIService.instance) {
@@ -28,30 +35,65 @@ export class AIService {
     return AIService.instance;
   }
 
+  private initializeProviders() {
+    // Initialize available providers based on API keys
+    if (env.OPENAI_API_KEY) {
+      const openaiProvider = createProvider("openai", {
+        apiKey: env.OPENAI_API_KEY,
+        model: "gpt-3.5-turbo",
+        temperature: 0.7,
+        maxTokens: 1000,
+      });
+      this.providerManager.addProvider(openaiProvider);
+      this.providerManager.setActiveProvider("openai"); // Default to OpenAI if available
+    }
+
+    if (env.GEMINI_API_KEY) {
+      const geminiProvider = createProvider("gemini", {
+        apiKey: env.GEMINI_API_KEY,
+        model: "gemini-pro",
+        temperature: 0.7,
+        maxTokens: 1000,
+      });
+      this.providerManager.addProvider(geminiProvider);
+      if (!this.providerManager.getActiveProvider()) {
+        this.providerManager.setActiveProvider("gemini");
+      }
+    }
+
+    if (env.CLAUDE_API_KEY) {
+      const claudeProvider = createProvider("claude", {
+        apiKey: env.CLAUDE_API_KEY,
+        model: "claude-3-sonnet-20240229",
+        temperature: 0.7,
+        maxTokens: 1000,
+      });
+      this.providerManager.addProvider(claudeProvider);
+      if (!this.providerManager.getActiveProvider()) {
+        this.providerManager.setActiveProvider("claude");
+      }
+    }
+  }
+
   async getAssistance(request: AIAssistanceRequest): Promise<AIAssistanceResponse> {
     try {
       const prompt = this.buildPrompt(request);
       
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "You are an AI assistant specialized in helping developers with their notes, code, and documentation. Provide concise, helpful responses.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-      });
+      const messages: AIMessage[] = [
+        {
+          role: "system",
+          content: "You are an AI assistant specialized in helping developers with their notes, code, and documentation. Provide concise, helpful responses.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ];
 
-      const result = completion.choices[0]?.message?.content || "";
+      const response = await this.providerManager.generateResponse(messages);
       
       return {
-        result,
+        result: response.content,
         confidence: 0.8, // Could be enhanced with actual confidence scoring
       };
     } catch (error) {
@@ -60,25 +102,33 @@ export class AIService {
     }
   }
 
+  setActiveProvider(provider: AIProvider) {
+    this.providerManager.setActiveProvider(provider);
+  }
+
+  getAvailableProviders(): AIProvider[] {
+    return this.providerManager.getAvailableProviders();
+  }
+
+  async validateProvider(provider: AIProvider): Promise<boolean> {
+    return this.providerManager.validateProvider(provider);
+  }
+
   async generateCodeSuggestions(code: string, language: string): Promise<string[]> {
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: `You are a code review assistant. Analyze the ${language} code and provide 3-5 specific improvement suggestions. Focus on best practices, performance, and readability.`,
-          },
-          {
-            role: "user",
-            content: `Please review this ${language} code and provide improvement suggestions:\n\n${code}`,
-          },
-        ],
-        max_tokens: 800,
-        temperature: 0.5,
-      });
+      const messages: AIMessage[] = [
+        {
+          role: "system",
+          content: `You are a code review assistant. Analyze the ${language} code and provide 3-5 specific improvement suggestions. Focus on best practices, performance, and readability.`,
+        },
+        {
+          role: "user",
+          content: `Please review this ${language} code and provide improvement suggestions:\n\n${code}`,
+        },
+      ];
 
-      const suggestions = completion.choices[0]?.message?.content || "";
+      const response = await this.providerManager.generateResponse(messages);
+      const suggestions = response.content;
       return suggestions.split('\n').filter(s => s.trim().length > 0).slice(0, 5);
     } catch (error) {
       console.error("Code suggestions error:", error);
@@ -88,23 +138,19 @@ export class AIService {
 
   async generateTags(content: string): Promise<string[]> {
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "Generate 3-7 relevant tags for the given content. Focus on programming languages, technologies, concepts, and topics. Return only the tags separated by commas.",
-          },
-          {
-            role: "user",
-            content: `Generate tags for this content:\n\n${content.slice(0, 1000)}`,
-          },
-        ],
-        max_tokens: 100,
-        temperature: 0.3,
-      });
+      const messages: AIMessage[] = [
+        {
+          role: "system",
+          content: "Generate 3-7 relevant tags for the given content. Focus on programming languages, technologies, concepts, and topics. Return only the tags separated by commas.",
+        },
+        {
+          role: "user",
+          content: `Generate tags for this content:\n\n${content.slice(0, 1000)}`,
+        },
+      ];
 
-      const tagsString = completion.choices[0]?.message?.content || "";
+      const response = await this.providerManager.generateResponse(messages);
+      const tagsString = response.content;
       return tagsString
         .split(',')
         .map(tag => tag.trim().toLowerCase())
@@ -118,23 +164,19 @@ export class AIService {
 
   async suggestTitle(content: string): Promise<string> {
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "Generate a concise, descriptive title for the given content. The title should be 3-8 words and capture the main topic or purpose.",
-          },
-          {
-            role: "user",
-            content: `Generate a title for this content:\n\n${content.slice(0, 500)}`,
-          },
-        ],
-        max_tokens: 50,
-        temperature: 0.5,
-      });
+      const messages: AIMessage[] = [
+        {
+          role: "system",
+          content: "Generate a concise, descriptive title for the given content. The title should be 3-8 words and capture the main topic or purpose.",
+        },
+        {
+          role: "user",
+          content: `Generate a title for this content:\n\n${content.slice(0, 500)}`,
+        },
+      ];
 
-      return completion.choices[0]?.message?.content?.trim() || "Untitled Note";
+      const response = await this.providerManager.generateResponse(messages);
+      return response.content.trim() || "Untitled Note";
     } catch (error) {
       console.error("Title suggestion error:", error);
       return "Untitled Note";
@@ -143,23 +185,19 @@ export class AIService {
 
   async explainCode(code: string, language: string): Promise<string> {
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: `You are a code explanation assistant. Explain ${language} code in simple terms, describing what it does, how it works, and any important concepts involved.`,
-          },
-          {
-            role: "user",
-            content: `Please explain this ${language} code:\n\n${code}`,
-          },
-        ],
-        max_tokens: 600,
-        temperature: 0.4,
-      });
+      const messages: AIMessage[] = [
+        {
+          role: "system",
+          content: `You are a code explanation assistant. Explain ${language} code in simple terms, describing what it does, how it works, and any important concepts involved.`,
+        },
+        {
+          role: "user",
+          content: `Please explain this ${language} code:\n\n${code}`,
+        },
+      ];
 
-      return completion.choices[0]?.message?.content || "Unable to explain the code.";
+      const response = await this.providerManager.generateResponse(messages);
+      return response.content || "Unable to explain the code.";
     } catch (error) {
       console.error("Code explanation error:", error);
       return "Unable to explain the code.";

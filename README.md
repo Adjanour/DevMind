@@ -4,9 +4,13 @@ DevMind is a next-generation notes and knowledge base application specifically d
 
 ## 🚀 Features
 
-### ✅ Implemented (v1.0)
+### ✅ Implemented (v2.0)
 - **Rich Note Editor**: Advanced text editor with markdown support, syntax highlighting, and rich formatting
-- **AI Integration**: OpenAI-powered smart suggestions, content improvement, and auto-tagging
+- **AI-Agnostic System**: Support for OpenAI, Google Gemini, and Anthropic Claude with unified interface
+- **AI Provider Management**: Secure API key management and provider switching
+- **Smart Templates**: AI-powered note templates with intelligent customization
+- **Voice Notes**: Speech-to-text transcription with AI enhancement
+- **AI Chat Assistant**: Conversational AI interface for note assistance and brainstorming
 - **Smart Organization**: Tag-based categorization, pinning, and archiving
 - **Intelligent Search**: Full-text search across notes with filtering capabilities
 - **Timeline View**: Track project milestones and progress over time
@@ -99,9 +103,12 @@ npm run dev
 bun dev
 ```
 
-**Important**: Add your OpenAI API key to `.env.local`:
+**Important**: Add your AI provider API keys to `.env.local` (you can use one or more):
 ```bash
+# Choose your preferred AI provider(s)
 OPENAI_API_KEY="sk-your-openai-api-key-here"
+GEMINI_API_KEY="your-gemini-api-key-here" 
+CLAUDE_API_KEY="your-claude-api-key-here"
 ```
 
 ### 5. Access the Application

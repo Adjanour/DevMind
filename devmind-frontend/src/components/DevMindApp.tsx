@@ -7,8 +7,12 @@ import { SearchBar } from "./SearchBar";
 import { TimelineView } from "./TimelineView";
 import { MindMapView } from "./MindMapView";
 import { api, type Note, type Tag } from "~/lib/api";
-import { Brain, FileText, Clock, Map } from "lucide-react";
+import { Brain, FileText, Clock, Map, Settings, MessageSquare, Mic, FileTemplate, X } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { AIProviderSettings } from "./AIProviderSettings";
+import { AIChatAssistant } from "./AIChatAssistant";
+import { VoiceNotes } from "./VoiceNotes";
+import { SmartTemplates } from "./SmartTemplates";
 
 type View = "notes" | "timeline" | "mindmap";
 
@@ -20,6 +24,12 @@ export function DevMindApp() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // v2.0 state
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [showVoiceNotes, setShowVoiceNotes] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -59,19 +69,36 @@ export function DevMindApp() {
     }
   };
 
-  const createNote = async () => {
+  const createNote = async (title?: string, content?: string) => {
     try {
       const newNote = await api.createNote({
-        title: "Untitled Note",
-        content: "",
+        title: title || "Untitled Note",
+        content: content || "",
         contentType: "markdown",
         tags: "[]",
       });
       setNotes([newNote, ...notes]);
       setSelectedNote(newNote);
+      setCurrentView("notes");
     } catch (error) {
       console.error("Failed to create note:", error);
     }
+  };
+
+  const handleVoiceTranscription = (transcription: string, title?: string) => {
+    createNote(title, transcription);
+    setShowVoiceNotes(false);
+  };
+
+  const handleTemplateSelect = (template: any) => {
+    createNote(template.name, template.content);
+    setShowTemplates(false);
+  };
+
+  const insertTextIntoNote = (text: string) => {
+    // This would be handled by the NoteEditor component
+    // For now, we'll just show a placeholder
+    console.log("Insert text:", text);
   };
 
   const updateNote = async (id: number, updates: Partial<Note>) => {
@@ -188,17 +215,96 @@ export function DevMindApp() {
           notes={notes}
           selectedNote={selectedNote}
           onSelectNote={setSelectedNote}
-          onCreateNote={createNote}
+          onCreateNote={() => createNote()}
           tags={tags}
           selectedTags={selectedTags}
           onTagSelect={setSelectedTags}
         />
+
+        {/* v2.0 Action Buttons */}
+        <div className="p-4 border-t border-border">
+          <div className="space-y-2">
+            <button
+              onClick={() => setShowTemplates(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+            >
+              <FileTemplate className="h-4 w-4" />
+              Smart Templates
+            </button>
+            <button
+              onClick={() => setShowVoiceNotes(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+            >
+              <Mic className="h-4 w-4" />
+              Voice Notes
+            </button>
+            <button
+              onClick={() => setShowAIChat(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+            >
+              <MessageSquare className="h-4 w-4" />
+              AI Assistant
+            </button>
+            <button
+              onClick={() => setShowAISettings(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+              AI Settings
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {renderView()}
       </div>
+
+      {/* v2.0 Modals and Overlays */}
+      <AIProviderSettings
+        isOpen={showAISettings}
+        onClose={() => setShowAISettings(false)}
+      />
+      
+      <AIChatAssistant
+        isOpen={showAIChat}
+        onClose={() => setShowAIChat(false)}
+        context={{
+          noteContent: selectedNote?.content,
+          noteTitle: selectedNote?.title,
+        }}
+        onInsertText={insertTextIntoNote}
+        onCreateNote={createNote}
+      />
+
+      <SmartTemplates
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        onSelectTemplate={handleTemplateSelect}
+      />
+
+      {/* Voice Notes Modal */}
+      {showVoiceNotes && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowVoiceNotes(false)}
+          />
+          <div className="relative w-full max-w-md bg-card rounded-xl border border-border shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Voice Notes</h3>
+              <button
+                onClick={() => setShowVoiceNotes(false)}
+                className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <VoiceNotes onTranscriptionComplete={handleVoiceTranscription} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
